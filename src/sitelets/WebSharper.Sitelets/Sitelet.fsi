@@ -71,6 +71,10 @@ module Sitelet =
     val Map<'T1,'T2 when 'T1 : equality and 'T2 : equality> :
         ('T1 -> 'T2) -> ('T2 -> 'T1) -> Sitelet<'T1> -> Sitelet<'T2>
 
+    /// Maps over the context passed to the sitelet content.
+    val MapContext<'T when 'T : equality> :
+        (Context<'T> -> Context<'T>) -> Sitelet<'T> -> Sitelet<'T>
+
     /// Maps over the sitelet action type with only an injection.
     val Embed<'T1, 'T2 when 'T1 : equality and 'T2 : equality> :
         ('T1 -> 'T2) -> ('T2 -> 'T1 option) -> Sitelet<'T1> -> Sitelet<'T2>

@@ -136,6 +136,16 @@ module Sitelet =
                 }
         }
 
+    let MapContext (f: Context<'T> -> Context<'T>) (s: Sitelet<'T>) : Sitelet<'T> =
+        { s with
+            Controller =
+                {
+                    Handle = fun action ->
+                        s.Controller.Handle action
+                        |> WebSharper.Sitelets.Content.MapContextSync f
+                }
+        }
+
     /// Maps over the sitelet action type with only an injection.
     let Embed embed unembed sitelet =
         {

@@ -95,6 +95,12 @@ module Content =
     /// content to 'CustomContent'.
     val MapResponseAsync<'T> : (Http.Response -> Async<Http.Response>) -> Async<Content<'T>> -> Async<Content<'T>>
 
+    /// Modify the context that is passed to a content.
+    val MapContext<'T> : (Context<'T> -> Context<'T>) -> Async<Content<'T>> -> Async<Content<'T>>
+
+    /// Modify the context that is passed to a content.
+    val internal MapContextSync<'T> : (Context<'T> -> Context<'T>) -> Content<'T> -> Content<'T>
+
     /// Add headers to the generated response. Transforms any
     /// content to 'CustomContent'.
     val WithHeaders<'T> : seq<Http.Header> -> Async<Content<'T>> -> Async<Content<'T>>

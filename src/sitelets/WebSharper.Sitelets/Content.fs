@@ -158,9 +158,9 @@ module Content =
         member this.GetResourcesAndScripts controls =
             getResourcesAndScripts this controls
 
-    let toCustomContentAsync (genPage: Context<'T> -> Async<Page>) context : Async<Http.Response> =
-        async {
-            let! htmlPage = genPage context
+    let toCustomContentAsync (htmlPage: Page) : Context<'T> -> Async<Http.Response> =
+        () // Force a 1-arg function returning a func, rather than a 2-arg function
+        fun context -> async {
             let writeBody (stream: Stream) =
                 let body = Seq.cache htmlPage.Body
                 let renderHead (tw: UI.HtmlTextWriter) =
@@ -183,9 +183,6 @@ module Content =
                 WriteBody = writeBody
             }
         }
-
-    let toCustomContent genPage context =
-        Async.RunSynchronously(toCustomContentAsync genPage context)
 
     let JsonContent<'T, 'U> (f: Context<'T> -> 'U) =
         let encoder = ActionEncoding.JsonProvider.GetEncoder<'U>()
@@ -267,6 +264,17 @@ module Content =
                 return f result
             }
         |> async.Return
+
+    let MapContextSync<'T> (f: Context<'T> -> Context<'T>) (content: Content<'T>) : Content<'T> =
+        match content with
+        | CustomContent c -> CustomContent (f >> c)
+        | CustomContentAsync c -> CustomContentAsync (f >> c)
+
+    let MapContext<'T> (f:Context<'T> -> Context<'T>) (content: Async<Content<'T>>) : Async<Content<'T>> =
+        async {
+            let! content = content
+            return MapContextSync f content
+        }
 
     let SetHeaders<'T> (headers: seq<Http.Header>) (cont: Async<Content<'T>>) =
         cont
@@ -385,7 +393,7 @@ type Content<'Action> with
         }
 
     static member Page (page: Page) : Async<Content<'Action>> =
-        Content.CustomContentAsync (Content.toCustomContentAsync (fun _ -> async { return page }))
+        Content.CustomContentAsync (Content.toCustomContentAsync page)
         |> async.Return
 
     static member Text (text: string, ?encoding: System.Text.Encoding) : Async<Content<'Action>> =
