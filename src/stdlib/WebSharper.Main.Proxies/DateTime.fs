@@ -32,50 +32,59 @@ type private DO = System.DateTimeOffset
 [<JavaScript>]
 [<Name "DateUtil">]
 module private DateTimeHelpers =
+
+    /// The number of milliseconds between DateTime.MinValue and Jan 1, 1970.
+    [<Literal>]
+    let TimestampMs = 62135596800000L
+
+    /// The number of milliseconds between Jan 1, 1970 and DateTime.MaxValue.
+    [<Literal>]
+    let MaxValueMs = 253402300799999L
+
     let DatePortion (d: int) =
         let e = Date(d)
-        Date(       
-            e.GetFullYear(),
-            e.GetMonth(),
-            e.GetDate()
-        ).GetTime()
+        Date.UTC(       
+            e.GetUTCFullYear(),
+            e.GetUTCMonth(),
+            e.GetUTCDate()
+        )
         |> As<D>        
 
     let TimePortion (d: int) =
         let e = Date(d)
         TS(
             0,
-            e.GetHours(), 
-            e.GetMinutes(), 
-            e.GetSeconds(), 
-            e.GetMilliseconds()
+            e.GetUTCHours(), 
+            e.GetUTCMinutes(), 
+            e.GetUTCSeconds(), 
+            e.GetUTCMilliseconds()
         )        
         |> As<TS>        
 
     let AddYears(d: int, years) =
         let e = Date(d)
-        Date(   
-            e.GetFullYear() + years,
-            e.GetMonth(),
-            e.GetDate(),
-            e.GetHours(),
-            e.GetMinutes(),
-            e.GetSeconds(),
-            e.GetMilliseconds()
-        ).GetTime()
+        Date.UTC(   
+            e.GetUTCFullYear() + years,
+            e.GetUTCMonth(),
+            e.GetUTCDate(),
+            e.GetUTCHours(),
+            e.GetUTCMinutes(),
+            e.GetUTCSeconds(),
+            e.GetUTCMilliseconds()
+        )
         |> As<D>        
 
     let AddMonths(d: int, months: int) =
         let e = Date(d)
-        Date(   
-            e.GetFullYear(),
-            e.GetMonth() + months,
-            e.GetDate(),
-            e.GetHours(),
-            e.GetMinutes(),
-            e.GetSeconds(),
-            e.GetMilliseconds()
-        ).GetTime()    
+        Date.UTC(   
+            e.GetUTCFullYear(),
+            e.GetUTCMonth() + months,
+            e.GetUTCDate(),
+            e.GetUTCHours(),
+            e.GetUTCMinutes(),
+            e.GetUTCSeconds(),
+            e.GetUTCMilliseconds()
+        )
         |> As<D>        
 
     let TryParse (s: string) =
@@ -90,33 +99,41 @@ module private DateTimeHelpers =
         | _ ->
             failwith "Failed to parse date string."
 
-    [<Direct "(new Date($d)).toLocaleDateString({}, {year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'})">]
+    [<Direct "(new Date($d)).toLocaleDateString({}, {year: 'numeric', month: 'long', day: 'numeric', weekday: 'long', timeZone: 'UTC'})">]
     let LongDate (d: obj) = X<string>
      
-    [<Direct "(new Date($d)).toLocaleTimeString({}, {hour: '2-digit', minute: '2-digit', hour12: false})">]
+    [<Direct "(new Date($d)).toLocaleTimeString({}, {hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'UTC'})">]
     let ShortTime (d: obj) = X<string>
 
-    [<Direct "(new Date($d)).toLocaleTimeString({}, {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false})">]
+    [<Direct "(new Date($d)).toLocaleTimeString({}, {hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false, timeZone: 'UTC'})">]
     let LongTime (d: obj) = X<string>
                 
-// DateTime is represented as an UTC epoch for remoting purposes.
+// DateTime is represented as an UTC epoch in milliseconds for remoting purposes.
 // Properties for getting sub-dates/times like Day or Hour convert it to local time on the client for easier display purposes.
 // This is inconsistent, but covers most common uses.
 // If you need UTC time details, use .JS and its UTC methods.
 [<Proxy(typeof<System.DateTime>)>]
 type private DateTimeProxy =
-    [<Inline "0">]
-    new () = {}
+    [<Inline>]
+    static member CtorProxy () =
+        As<DateTimeProxy>(-DateTimeHelpers.TimestampMs)
 
-    [<Inline "new Date($y,$mo-1,$d).getTime()">]
-    new (y: int, mo: int, d: int) = {}
+    [<Inline>]
+    static member CtorProxy (ticks: int64) =
+        As<DateTimeProxy>(ticks / 10_000L - DateTimeHelpers.TimestampMs)
 
-    [<Inline "new Date($y,$mo-1,$d,$h,$m,$s).getTime()">]
-    new (y: int, mo: int, d: int, h: int, m: int, s: int) = {}
+    [<Inline>]
+    static member CtorProxy (y: int, mo: int, d: int) =
+        As<DateTimeProxy>(Date.UTC(y, mo - 1, d))
 
-    [<Inline "new Date($y,$mo-1,$d,$h,$m,$s,$ms).getTime()">]
-    new (y: int, mo: int, d: int, h: int, m: int, s: int, ms: int) = {}
-    
+    [<Inline>]
+    static member CtorProxy (y: int, mo: int, d: int, h: int, m: int, s: int) =
+        As<DateTimeProxy>(Date.UTC(y, mo - 1, d, h, m, s))
+
+    [<Inline>]
+    static member CtorProxy (y: int, mo: int, d: int, h: int, m: int, s: int, ms: int) =
+        As<DateTimeProxy>(Date.UTC(y, mo - 1, d, h, m, s, ms))
+
     static member Now
         with [<Inline "Date.now()">] get() = X<D>
 
@@ -136,31 +153,31 @@ type private DateTimeProxy =
         with [<Inline; JavaScript>] get() = DateTimeHelpers.TimePortion(As this)
 
     member this.Year
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetFullYear()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCFullYear()
 
     member this.Month 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetMonth() + 1
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCMonth() + 1
 
     member this.Day 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetDate()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCDate()
 
     member this.Hour 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetHours()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCHours()
                                                   
     member this.Minute 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetMinutes()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCMinutes()
     
     member this.Second 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetSeconds()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCSeconds()
 
     member this.Millisecond 
-        with [<Inline; JavaScript>] get() = Date(As<int> this).GetMilliseconds()
+        with [<Inline; JavaScript>] get() = Date(As<int> this).GetUTCMilliseconds()
     
     member this.DayOfWeek 
-        with [<Inline; JavaScript>] get() = As<System.DayOfWeek>(Date(As<int> this).GetDay())
+        with [<Inline; JavaScript>] get() = As<System.DayOfWeek>(Date(As<int> this).GetUTCDay())
 
     member this.Ticks
-        with [<Inline "$this * 1E4">] get() = X<int64>
+        with [<Inline>] get() = (As<int64> this + DateTimeHelpers.TimestampMs) * 10_000L
 
     [<Inline "$this + $t">]
     member this.Add(t: TS) = X<D>
@@ -225,10 +242,10 @@ type private DateTimeProxy =
         | _ -> false    
 
     static member MaxValue
-        with [<Inline "8640000000000000">] get () = X<int>
+        with [<Inline>] get () = As<D> DateTimeHelpers.MaxValueMs
 
     static member MinValue
-        with [<Inline "-8640000000000000">] get () = X<int>
+        with [<Inline>] get () = As<D> -DateTimeHelpers.TimestampMs
 
     [<Inline "$a + $b">]
     static member (+) (a: D, b: TS) = X<D>

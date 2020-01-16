@@ -127,6 +127,12 @@ let Tests =
             approxEqual (As<float> d.TimeOfDay) (As<float> (TimeSpan(15, 5, 39)))
         }
 
+        Test "Ticks" {
+            equal d (DateTime(d.Ticks))
+            equal d.Ticks (DateTime(1970, 1, 1, 0, 0, 0).Ticks + As<int64> d * 10_000L)
+            equal (d.AddTicks(123456789L).Ticks) (d.Ticks + 123456789L)
+        }
+
     //    Test "Kind" {
     //        DateTime.Now.Kind =? DateTimeKind.Local
     //        DateTime.UtcNow.Kind =? DateTimeKind.Utc
@@ -179,8 +185,6 @@ let Tests =
 
         Test "String" {
             let d = DateTime(2010, 4, 8, 15, 5, 39)
-            Console.Log("DateTime.ToShortDateString", d.ToShortDateString())
-            Console.Log("DateTime.ToLongDateString", d.ToLongDateString())
             equal (d.ToShortTimeString()) "15:05"
             equal (d.ToLongTimeString()) "15:05:39"
         }
@@ -188,14 +192,14 @@ let Tests =
         Test "Parse" {
             let d = DateTime(2010, 4, 8, 15, 5, 39)
             raises (DateTime.Parse("not a date"))
-            equal (DateTime.Parse("Thu, 08 Apr 2010 13:05:39 GMT")) d
-            equal (Date.Parse("Thu, 08 Apr 2010 13:05:39 GMT")) (As<int> d)
+            equal (DateTime.Parse("Thu, 08 Apr 2010 15:05:39 GMT")) d
+            equal (Date.Parse("Thu, 08 Apr 2010 15:05:39 GMT")) (As<int> d)
         }
 
         Test "TryParse" {
             let d = DateTime(2010, 4, 8, 15, 5, 39)
             equal (DateTime.TryParse("not a date") |> fst) false
-            equal (DateTime.TryParse("Thu, 08 Apr 2010 13:05:39 GMT")) (true, d)
+            equal (DateTime.TryParse("Thu, 08 Apr 2010 15:05:39 GMT")) (true, d)
         }
 
         Test "DaysInMonth" {
