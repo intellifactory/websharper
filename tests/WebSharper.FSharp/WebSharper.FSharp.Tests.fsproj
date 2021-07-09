@@ -14,6 +14,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\compiler\WebSharper.Compiler\WebSharper.Compiler.fsproj" />
     <ProjectReference Include="..\..\src\compiler\WebSharper.Compiler.FSharp\WebSharper.Compiler.FSharp.fsproj" />
+    <ProjectReference Include="..\..\src\compiler\WebSharper.FSharp.Service\WebSharper.FSharp.Service.fsproj" />
     <ProjectReference Include="..\..\src\compiler\WebSharper.FSharp\WebSharper.FSharp.fsproj" />
   </ItemGroup>
   <Import Project="..\..\msbuild\FSharp.targets" />

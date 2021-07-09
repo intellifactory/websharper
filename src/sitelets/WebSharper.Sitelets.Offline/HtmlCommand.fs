@@ -61,14 +61,37 @@ type HtmlCommand() =
                     | None ->
                         failwithf "Failed to load %s" file
                     | Some assembly ->
+                        let siteletType =
+                            assembly.CustomAttributes |> Seq.tryPick (fun a ->
+                                if a.AttributeType.FullName = "WebSharper.Sitelets.WebsiteAttribute" then
+                                    let args = a.ConstructorArguments
+                                    if args.Count = 1 then 
+                                        Some a.ConstructorArguments.[0]
+                                    else
+                                        None
+                                else
+                                    None
+                            )
                         let aT = typeof<WebsiteAttribute>
-                        match Attribute.GetCustomAttribute(assembly, aT) with
-                        | :? WebsiteAttribute as attr ->
-                            attr.Run ()
-                        |_  ->
-                            failwithf "Failed to find WebSiteAttribute \
-                                on the processed assembly: %s"
-                                file
+                        match siteletType with
+                        | Some a ->
+                            let typeName = (a.Value :?> Type).AssemblyQualifiedName
+                            let ty = System.Type.GetType(typeName, true)
+                            
+                            let website = Activator.CreateInstance(ty)
+                            let innerTypeOpt =
+                                ty.GetInterfaces()
+                                |> Seq.tryPick (fun iT ->
+                                    if iT.FullName.StartsWith("WebSharper.Sitelets.IWebsite`1") then
+                                        Some (iT.GetGenericArguments().[0])
+                                    else
+                                        None)
+                            let innerType =
+                                match innerTypeOpt with
+                                | Some t -> t
+                                | None -> failwith "Type is not implementing IWebsite"
+
+                            WebSharper.Sitelets.Utils.GetSitelet innerType website
                 let (sitelet, actions) = loadSite options.MainAssemblyPath
 
                 if options.DownloadResources then

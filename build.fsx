@@ -211,6 +211,7 @@ Target.create "Stop" <| fun _ ->
     | _ -> ()
 
 "Stop" ==> "WS-Clean"
+"Stop" ==> "WS-Restore"
 
 "WS-BuildRelease"
     ==> "RunTestsRelease"
@@ -219,4 +220,4 @@ Target.create "Stop" <| fun _ ->
 "RunTestsRelease"
     ==> "CI-Release"
     
-Target.runOrDefault "Build"
+Target.runOrDefaultWithArguments "Build"

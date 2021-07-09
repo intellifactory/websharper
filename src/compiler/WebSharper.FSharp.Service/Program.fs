@@ -128,7 +128,7 @@ let startListening() =
                             r // unexpected, wsfsc.exe should handle this
                         | ParsedOptions (wsConfig, warnSettings) ->
 #if DEBUG
-                            Compile wsConfig warnSettings checkerFactory tryGetMetadata logger
+                            Compile wsConfig warnSettings logger checkerFactory tryGetMetadata
 #else
                             try Compile wsConfig warnSettings logger checkerFactory tryGetMetadata
                             with 

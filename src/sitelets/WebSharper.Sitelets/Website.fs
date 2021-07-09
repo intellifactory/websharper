@@ -53,7 +53,7 @@ module internal Specialization =
             let f = Delegate.CreateDelegate(dT, algorithm, m)
             (f :?> Converter<'T1,'T2>).Invoke
 
-module private Utils =
+module Utils =
     module S = Specialization
 
     let GetSitelet : Type -> _ -> _ =

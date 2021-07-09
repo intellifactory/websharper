@@ -30,4 +30,5 @@
     <ProjectReference Include="..\WebSharper.Sitelets.Tests\WebSharper.Sitelets.Tests.fsproj" />
   </ItemGroup>
 
+  <Import Project="..\..\msbuild\WebSharper.FSharp.Internal.targets" />
 </Project>

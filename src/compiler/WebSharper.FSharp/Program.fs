@@ -47,16 +47,21 @@ let main(argv) =
     nLogger.Debug "Debug level is on"
     let argv = formatArgv argv
     let logger = ConsoleLogger()   
-    let standaloneMode = argv |> Array.exists (fun x -> x.IndexOf("--standalone", System.StringComparison.OrdinalIgnoreCase) >= 0)
-    let argv = argv |> Array.filter (fun x -> x <> "--standalone")
     let parsedOptions = ParseOptions argv logger
     match parsedOptions with
     | HelpOrCommand r ->
         r
     | ParsedOptions (wsConfig, warnSettings) ->
-        if standaloneMode then
-            let reason = "--standalone flag is present"
-            logger.DebugWrite <| sprintf "Start compilation in standalone mode. Reason: %s" reason
+        if wsConfig.Standalone then
+            let reason =
+                if System.Environment.GetEnvironmentVariables()
+                    |> Seq.cast<System.Collections.DictionaryEntry>
+                    |> Seq.exists (fun x -> (x.Key :?> string).ToLower() = "websharperbuildservice" && (x.Value :?> string).ToLower() = "false")
+                then
+                    "WebSharperBuildService environment variable is set to false"
+                else
+                    "--standalone compile flag is set or WebSharperStandalone targets variable set"
+            nLogger.Debug "Start compilation in standalone mode because %s." reason
             let createChecker() = FSharpChecker.Create(keepAssemblyContents = true)
             let tryGetMetadata = WebSharper.Compiler.FrontEnd.TryReadFromAssembly WebSharper.Compiler.FrontEnd.ReadOptions.FullMetadata
 #if DEBUG

@@ -22,12 +22,8 @@
     <ProjectReference Include="..\WebSharper.Sitelets\WebSharper.Sitelets.fsproj" />
     <ProjectReference Include="..\WebSharper.Web\WebSharper.Web.fsproj" />
   </ItemGroup>
-  <Target Name="_CopyToDeploy" AfterTargets="Build" Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <Copy SourceFiles="$(OutputPath)\WebSharper.Sitelets.Offline.dll" DestinationFolder="$(OutputPath)\..\..\netcoreapp2.0\deploy" />
+  <Target Name="_CopyToDeploy" AfterTargets="Build" >
     <Copy SourceFiles="$(OutputPath)\WebSharper.Sitelets.Offline.dll" DestinationFolder="$(OutputPath)\..\..\net5.0\deploy" />
-  </Target>
-  <Target Name="_CopyToTools" AfterTargets="Build" Condition="'$(TargetFramework)' == 'net472'">
-    <Copy SourceFiles="$(OutputPath)\WebSharper.Sitelets.Offline.dll" DestinationFolder="$(OutputPath)\..\..\net472\deploy" />
   </Target>
   <Import Project="..\..\..\msbuild\FSharp.targets" />
   <Import Project="..\..\..\.paket\Paket.Restore.targets" />

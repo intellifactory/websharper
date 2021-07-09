@@ -84,6 +84,7 @@ type WsConfig =
         ProxyTargetName : string option
         UseJavaScriptSymbol : bool
         TargetProfile : string
+        Standalone : bool
     }
 
     member this.ProjectDir =
@@ -120,6 +121,9 @@ type WsConfig =
             ProxyTargetName = None
             UseJavaScriptSymbol = false
             TargetProfile = "mscorlib"
+            Standalone = System.Environment.GetEnvironmentVariables()
+                |> Seq.cast<System.Collections.DictionaryEntry>
+                |> Seq.exists (fun x -> (x.Key :?> string).ToLower() = "websharperbuildservice" && (x.Value :?> string).ToLower() = "false")
         }
 
     static member ParseAnalyzeClosures(c: string) =
@@ -447,7 +451,9 @@ let HandleDefaultArgsAndCommands (logger: LoggerBase) argv isFSharp =
   --project:<path>      Location of project file
   --closures[+|-]       Enable JS closure analysis
                           default: false
-  --closures:movetotop  Enable JS closure optimization"""
+  --closures:movetotop  Enable JS closure optimization
+  --standalone[+|-]     Use WebSharper compilation outside the service
+                          default: false"""
             |> logger.Out
         | UnpackHelp ->
             sprintf "%s" (UnpackCommand.Instance.Usage.Replace("WebSharper.exe", exe))    
@@ -504,6 +510,7 @@ let RecognizeWebSharperArg a wsArgs =
             Some (wsArgs.AddJson(File.ReadAllText c, Path.GetFileName c))
         else 
             argError (sprintf "Cannot find WebSharper configuration file %s" c)    
+    | Flag "--standalone" v -> Some { wsArgs with Standalone = v }
     | _ -> 
         None
 

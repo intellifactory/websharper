@@ -532,7 +532,7 @@ let reflectCustomType (typ : TypeDefinition) =
                 FST.GetUnionCases(t, Reflection.AllMethodsFlags)
                 |> Seq.map (fun c ->
                     let annot = attrReader.GetMemberAnnot(tAnnot, c.GetCustomAttributesData()) 
-                    let caseInfo =
+                    let kind =
                         match annot.Kind with
                         | Some (MemberKind.Constant v) -> M.ConstantFSharpUnionCase v
                         | _ ->
@@ -547,7 +547,7 @@ let reflectCustomType (typ : TypeDefinition) =
                                 } : M.UnionCaseFieldInfo 
                             )
                             |> List.ofArray |> M.NormalFSharpUnionCase  
-                    let isStatic =
+                    let staticIs =
                         not usesNull || not (
                             c.GetCustomAttributesData()
                             |> Seq.exists (fun a ->
@@ -558,8 +558,8 @@ let reflectCustomType (typ : TypeDefinition) =
                     {
                         Name = c.Name
                         JsonName = annot.Name
-                        Kind = caseInfo
-                        StaticIs = isStatic
+                        Kind = kind
+                        StaticIs = staticIs
                     } : M.FSharpUnionCaseInfo
                 )
                 |> List.ofSeq

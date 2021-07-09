@@ -28,7 +28,6 @@
   <PropertyGroup Condition=" '$(WebSharperRunCompiler)' == 'True' ">
     <OtherFlags>$(OtherFlags) --project:"$(MSBuildProjectFullPath.TrimEnd('\'))"</OtherFlags>
     <OtherFlags Condition=" '$(WebSharperProject)' != '' Or '$(WebProjectOutputDir)' != '' ">$(OtherFlags) --ws:"$(WebSharperProject)"</OtherFlags>
-    <OtherFlags Condition=" '$(WebSharperStandalone)' != '' ">$(OtherFlags) --standalone</OtherFlags>
     <OtherFlags Condition=" '$(WebProjectOutputDir)' != '' ">$(OtherFlags) --wsoutput:"$(WebProjectOutputDir.TrimEnd('\'))"</OtherFlags>
     <OtherFlags Condition=" '$(WebSharperBundleOutputDir)' != '' ">$(OtherFlags) --wsoutput:"$(WebSharperBundleOutputDir.TrimEnd('\'))"</OtherFlags>
     <OtherFlags Condition=" '$(WebSharperHtmlDirectory)' != '' ">$(OtherFlags) --wsoutput:"$(WebSharperHtmlDirectory.TrimEnd('\'))"</OtherFlags>
@@ -40,6 +39,7 @@
     <OtherFlags Condition=" '$(WebSharperAnalyzeClosures)' != '' ">$(OtherFlags) --closures:$(WebSharperAnalyzeClosures)</OtherFlags>
     <OtherFlags Condition=" '$(WebSharperJsOutput)' != '' ">$(OtherFlags) --jsoutput:$(WebSharperJsOutput)</OtherFlags>
     <OtherFlags Condition=" '$(WebSharperMinJsOutput)' != '' ">$(OtherFlags) --jsoutput:$(WebSharperMinJsOutput)</OtherFlags>
+    <OtherFlags Condition=" '$(WebSharperStandalone)' == 'True' ">$(OtherFlags) --standalone+</OtherFlags>
     <WebSharperConfigFile Condition=" '$(WebSharperConfigFile)' == '' AND Exists('$(MSBuildProjectDirectory)/wsconfig.$(MSBuildProjectName).json') ">$(MSBuildProjectDirectory)/wsconfig.$(MSBuildProjectName).json</WebSharperConfigFile>
     <WebSharperConfigFile Condition=" '$(WebSharperConfigFile)' == '' AND Exists('$(MSBuildProjectDirectory)/wsconfig.json') ">$(MSBuildProjectDirectory)/wsconfig.json</WebSharperConfigFile>
     <OtherFlags Condition=" '$(WebSharperConfigFile)' != '' ">$(OtherFlags) --wsconfig:"$(WebSharperConfigFile)"</OtherFlags>
